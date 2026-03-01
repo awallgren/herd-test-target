@@ -1,0 +1,166 @@
+name: Winnow Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  winnow-scan:
+    name: Winnow Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WINNOW_TELEMETRY: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download winnow binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download winnow-staging \
+            --repo "${{ github.repository }}" \
+            --pattern "winnow-linux-amd64" \
+            --dir .
+          chmod +x winnow-linux-amd64
+          mv winnow-linux-amd64 winnow
+
+      - name: Run winnow scan
+        id: scan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          ./winnow scan . --analyze --limit 10 \
+            -o /tmp/scan-results.json \
+            -o /tmp/scan-summary.md \
+            2>/tmp/scan-stderr.txt
+          SCAN_EXIT=$?
+          set -e
+
+          cat /tmp/scan-stderr.txt >&2
+
+          if [ $SCAN_EXIT -ne 0 ] && [ ! -s /tmp/scan-results.json ]; then
+            echo '{"findings":[],"total_dependencies":0}' > /tmp/scan-results.json
+          fi
+
+          # Extract counts for summary
+          CRITICAL=$(jq '[(.findings // [])[] | select(.severity == "CRITICAL")] | length' /tmp/scan-results.json 2>/dev/null || echo 0)
+          TOTAL=$(jq '[(.findings // [])[]] | length' /tmp/scan-results.json 2>/dev/null || echo 0)
+          echo "critical=$CRITICAL" >> "$GITHUB_OUTPUT"
+          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+
+      - name: Publish summary
+        if: always()
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          if [ -s /tmp/scan-summary.md ]; then
+            MAX_BYTES=60000
+            SIZE_BYTES=$(wc -c < /tmp/scan-summary.md 2>/dev/null || echo 0)
+
+            if [ "$SIZE_BYTES" -gt "$MAX_BYTES" ]; then
+              head -c "$MAX_BYTES" /tmp/scan-summary.md >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "> **Note:** Output truncated. See the uploaded scan artifact for full results." >> "$GITHUB_STEP_SUMMARY"
+            else
+              cat /tmp/scan-summary.md >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            echo "Winnow scan did not produce a markdown summary." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # Append herd CLI suggestion
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "### Herd these findings to completion"
+            echo ""
+            echo "To automatically fix discovered alerts (Dependabot, CodeQL, Copilot reviews):"
+            echo ""
+            echo '```bash'
+            echo "winnow herd ${REPO} --dry-run          # Preview what would be fixed"
+            echo "winnow herd ${REPO} --yolo             # Create fix PRs and auto-merge"
+            echo "winnow herd ${REPO} --yolo --monitor   # Full closed-loop: fix, merge, verify"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post PR comment
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO_FULL: ${{ github.repository }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const summaryFile = '/tmp/scan-summary.md';
+            if (!fs.existsSync(summaryFile)) {
+              console.log('No scan summary found, skipping PR comment');
+              return;
+            }
+            let body = fs.readFileSync(summaryFile, 'utf8');
+            const repo = process.env.REPO_FULL;
+
+            // Add marker and herd suggestion
+            body = [
+              '<!-- winnow-scan-results -->',
+              body,
+              '',
+              '---',
+              '',
+              '### Herd these findings to completion',
+              '',
+              '```bash',
+              `winnow herd ${repo} --dry-run          # Preview what would be fixed`,
+              `winnow herd ${repo} --yolo             # Create fix PRs and auto-merge`,
+              `winnow herd ${repo} --yolo --monitor   # Full closed-loop: fix, merge, verify`,
+              '```',
+            ].join('\n');
+
+            const prNumber = parseInt(process.env.PR_NUMBER);
+
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo,
+              issue_number: prNumber,
+            });
+
+            const marker = '<!-- winnow-scan-results';
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: existing.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: prNumber,
+                body: body,
+              });
+            }
+
+      - name: Upload results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: winnow-scan-results
+          path: |
+            /tmp/scan-results.json
+            /tmp/scan-summary.md
+          retention-days: 30
+          if-no-files-found: ignore
