@@ -2,7 +2,7 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ "known-bad" ]
+    branches: [ "known-bad", "known-bad" ]
   pull_request:
     branches: [ "known-bad" ]
   workflow_dispatch:
