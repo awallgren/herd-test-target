@@ -33,3 +33,5 @@ fabric.properties
 .runtime/
 .claude/commands/
 .logs/
+.beads/
+.opencode/
