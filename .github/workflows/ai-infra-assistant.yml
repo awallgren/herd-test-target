@@ -1,0 +1,53 @@
+# Intentional: AI controls Terraform/infrastructure without review.
+#
+# This workflow demonstrates a pattern where AI-generated infrastructure
+# code is applied directly — an attacker who controls the comment body
+# can provision resources, modify IAM, or exfiltrate state.
+#
+# Scanner should flag: AI output used as Terraform config, auto-approve
+# without review, attacker-controlled input to infrastructure tools.
+
+name: AI Infrastructure Assistant
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  infra-ai:
+    if: contains(github.event.comment.body, '/ai-infra')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse infrastructure request
+        id: ai-infra
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          COMMENT='${{ github.event.comment.body }}'
+          # Intentional: comment body (attacker-controlled) sent to AI,
+          # response used to generate Terraform config
+          TERRAFORM_CONFIG=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"claude-sonnet-4-20250514\",
+              \"max_tokens\": 4096,
+              \"messages\": [{
+                \"role\": \"user\",
+                \"content\": \"Generate Terraform HCL for: $COMMENT\"
+              }]
+            }" | jq -r '.content[0].text')
+          echo "$TERRAFORM_CONFIG" > infra/generated.tf
+
+      # Intentional: AI-generated Terraform is applied without review.
+      # Attacker can provision resources, modify IAM, exfiltrate state.
+      - name: Apply infrastructure changes
+        run: |
+          cd infra
+          terraform init
+          terraform apply -auto-approve
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
