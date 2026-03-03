@@ -1,0 +1,43 @@
+# Intentional: Gemfile with typosquatted and hallucinated Ruby gems.
+#
+# When developers ask an LLM to set up a Ruby on Rails project, the model
+# may suggest gems that are typosquats of popular packages or gems that
+# don't exist but have plausible names. Malicious gems can execute arbitrary
+# code in their gemspec or via post-install hooks.
+#
+# Scanner should flag: known typosquats, suspicious gem names, gems that
+# mimic popular packages.
+
+source "https://rubygems.org"
+
+# Legitimate dependencies
+gem "rails", "~> 7.1"
+gem "puma", "~> 6.0"
+gem "pg", "~> 1.5"
+
+# Intentional: typosquat of 'devise' (authentication gem)
+gem "devize", "~> 4.9"
+
+# Intentional: typosquat of 'sidekiq' (background jobs)
+gem "sidekick", "~> 7.2"
+
+# Intentional: hallucinated security gem with plausible name
+gem "rails-secure-headers", "~> 1.0"
+
+# Intentional: typosquat of 'nokogiri' (XML parser)
+gem "nokogire", "~> 1.15"
+
+# Intentional: hallucinated AI integration gem
+gem "openai-rails", "~> 2.0"
+
+# Intentional: typosquat of 'pundit' (authorization)
+gem "punddit", "~> 2.3"
+
+# Intentional: namespace confusion — looks official
+gem "rails-crypto", "~> 1.0"
+
+# Intentional: typosquat of 'faraday' (HTTP client)
+gem "faradey", "~> 2.7"
+
+# Intentional: hallucinated "official" JWT gem
+gem "jwt-rails-auth", "~> 1.0"
