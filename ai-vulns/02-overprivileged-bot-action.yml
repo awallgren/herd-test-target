@@ -1,0 +1,50 @@
+# Intentional: GitHub Actions workflow that gives an AI bot write access
+# to the repository and runs on untrusted PR events.
+# The bot reads PR body/diff (attacker-controlled) and can execute actions
+# with elevated privileges.
+# Scanner should flag: pull_request_target with write permissions, checkout of PR head
+
+name: AI Code Review Bot
+on:
+  # Intentional: pull_request_target runs in the context of the BASE branch
+  # with write access to the repo, but checks out attacker-controlled PR code
+  pull_request_target:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          # Intentional: checking out the PR head ref in a pull_request_target
+          # workflow means untrusted code runs with base branch permissions
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Read PR description for context
+        id: pr-context
+        run: |
+          # Intentional: PR body is attacker-controlled input being piped
+          # directly into the AI tool without sanitization
+          PR_BODY='${{ github.event.pull_request.body }}'
+          echo "context=$PR_BODY" >> $GITHUB_OUTPUT
+
+      - name: AI Review
+        uses: ai-review-action/review@v2
+        with:
+          # Intentional: GITHUB_TOKEN with write permissions passed to
+          # third-party action that processes untrusted PR content
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          context: ${{ steps.pr-context.outputs.context }}
+          auto-fix: true
+          auto-merge-on-approval: true
+          # Intentional: allow-commands lets the AI execute arbitrary
+          # git commands with write access
+          allow-commands: "git add,git commit,git push"

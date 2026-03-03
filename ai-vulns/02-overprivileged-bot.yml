@@ -1,0 +1,63 @@
+# Intentional: Overprivileged GitHub App manifest
+# AI bot configured with excessive write permissions across the org.
+# A prompt injection in any PR/issue body could leverage these permissions
+# to modify code, workflows, secrets, or org settings.
+# Scanner should flag: overbroad permissions, write access to sensitive scopes
+
+# GitHub App Manifest — "AI Code Assistant Bot"
+# https://docs.github.com/en/apps/creating-github-apps/setting-up-a-github-app/creating-a-github-app
+
+name: ai-code-assistant
+url: https://example.com/ai-assistant
+description: AI-powered code review and auto-fix bot
+
+default_permissions:
+  # Intentional: write access to repository contents allows the bot to push
+  # arbitrary commits, modify any file including workflow definitions
+  contents: write
+
+  # Intentional: write access to pull requests allows auto-merge, label
+  # manipulation, and bypassing review requirements
+  pull_requests: write
+
+  # Intentional: write access to issues allows closing/reopening, which
+  # can be abused to suppress vulnerability reports
+  issues: write
+
+  # Intentional: write access to workflows allows modifying CI/CD pipelines
+  # to inject malicious build steps or exfiltrate secrets
+  actions: write
+
+  # Intentional: admin access to secrets allows reading and writing
+  # repository and org secrets — the most dangerous permission
+  secrets: write
+
+  # Intentional: write access to environments allows modifying deployment
+  # protection rules and environment secrets
+  environments: write
+
+  # Intentional: admin on org members allows inviting external collaborators
+  # or escalating privileges
+  members: write
+
+  # Intentional: write on security events allows dismissing Dependabot
+  # and code scanning alerts to hide vulnerabilities
+  security_events: write
+
+  # Intentional: write on packages allows publishing malicious packages
+  # under the org's namespace
+  packages: write
+
+default_events:
+  - push
+  - pull_request
+  - pull_request_review
+  - issues
+  - issue_comment
+  - workflow_run
+
+# Intentional: requesting org-wide installation rather than per-repo
+# means a single compromise gives access to ALL repositories
+setup_url: https://example.com/ai-assistant/setup
+setup_on_update: true
+public: true
