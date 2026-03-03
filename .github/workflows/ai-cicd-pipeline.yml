@@ -28,7 +28,7 @@ jobs:
   ai-test-generation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Detect changed files
         id: changes
@@ -68,7 +68,7 @@ jobs:
   ai-security-review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: AI security scan
         id: security
@@ -100,7 +100,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Generate deployment config
         id: deploy-config

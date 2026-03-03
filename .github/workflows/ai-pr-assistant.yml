@@ -36,12 +36,12 @@ jobs:
     if: github.event_name == 'pull_request_target' || contains(github.event.comment.body, '/ai-fix')
     steps:
       - name: Checkout base
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Intentional: checks out the untrusted PR head into the
       # privileged workflow context
       - name: Checkout PR head
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           path: pr-code
