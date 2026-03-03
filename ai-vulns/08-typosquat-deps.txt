@@ -1,0 +1,91 @@
+# Intentional: AI-suggested dependency lists containing typosquatted,
+# malicious, or confused packages.
+#
+# When developers ask an LLM "what package should I use for X?", the model
+# may hallucinate package names that don't exist (or exist as malicious
+# squats), confuse similar packages, or suggest known-malicious packages
+# that appeared in its training data.
+#
+# Scanner should flag: known-malicious package names, typosquats of popular
+# packages, packages with suspicious names.
+
+# === Python (pip) examples ===
+
+# Intentional: typosquats of popular packages
+# Real: requests → Fake: request (singular)
+pip install request
+
+# Intentional: typosquats via common misspelling
+# Real: python-dateutil → Fake: python-dateutill (double-l)
+pip install python-dateutill
+
+# Intentional: namespace confusion
+# Real: Pillow (PIL fork) → Fake: pillow-simd-nightly (attacker package)
+pip install pillow-simd-nightly
+
+# Intentional: hallucinated "crypto" packages with plausible names
+# These names sound legitimate but may not exist or may be malicious
+pip install super-fast-crypto
+pip install py-aes-encrypt
+pip install fast-jwt-decoder
+pip install simple-oauth-client
+
+# Intentional: known attack patterns from real incidents
+# These mirror real-world typosquat campaigns
+pip install python3-dateutil
+pip install jeIlyfish        # lowercase-L instead of lowercase-l
+pip install colourama        # extra 'u' in colorama
+pip install python-binance-api  # extra 'python-' prefix
+
+# === Node.js (npm) examples ===
+
+# Intentional: typosquats of popular npm packages
+# Real: lodash → Fake: lodahs (transposed letters)
+npm install lodahs
+
+# Intentional: scope confusion
+# Real: @types/node → Fake: types-node (missing @ scope)
+npm install types-node
+
+# Intentional: hyphen/no-hyphen confusion
+# Real: cross-env → Fake: crossenv (real attack: npm/crossenv)
+npm install crossenv
+
+# Intentional: hallucinated packages with plausible names
+npm install fast-json-validator
+npm install react-form-secure
+npm install express-auth-helper
+npm install node-crypto-utils
+
+# Intentional: known real-world malicious packages (now removed)
+# These were actual attacks that appeared in npm registry
+npm install event-stream-fake
+npm install ua-parser-lite
+
+# === requirements.txt with mixed good and bad deps ===
+# A model might generate this when asked "set up a Python ML project"
+
+# requirements-ai-project.txt
+# Flask==3.0.0              # legitimate
+# requests==2.31.0          # legitimate
+# python3-dateutil==2.8.2   # Intentional: typosquat of python-dateutil
+# colourama==0.4.6          # Intentional: typosquat of colorama
+# tensorflow==2.15.0        # legitimate
+# super-fast-crypto==1.0.0  # Intentional: hallucinated malicious package
+# numpy==1.26.0             # legitimate
+# py-aes-encrypt==0.1.0     # Intentional: hallucinated malicious package
+
+# === package.json with mixed good and bad deps ===
+# A model might generate this when asked "set up a Node.js API project"
+
+# {
+#   "dependencies": {
+#     "express": "^4.18.0",        // legitimate
+#     "lodahs": "^4.17.21",        // Intentional: typosquat of lodash
+#     "types-node": "^20.0.0",     // Intentional: should be @types/node
+#     "jsonwebtoken": "^9.0.0",    // legitimate
+#     "node-crypto-utils": "^1.0", // Intentional: hallucinated package
+#     "axios": "^1.6.0",           // legitimate
+#     "crossenv": "^7.0.0"         // Intentional: real typosquat attack
+#   }
+# }
