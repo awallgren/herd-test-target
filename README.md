@@ -6,4 +6,5 @@
 
 [![CodeQL](https://github.com/awallgren/herd-test-target/actions/workflows/codeql.yml/badge.svg)](https://github.com/awallgren/herd-test-target/actions/workflows/codeql.yml)
 [![Winnow Scan](https://github.com/awallgren/herd-test-target/actions/workflows/winnow-scan.yml/badge.svg)](https://github.com/awallgren/herd-test-target/actions/workflows/winnow-scan.yml)
-[![Dependabot](https://img.shields.io/badge/dependabot-enabled-blue?logo=dependabot)](https://github.com/awallgren/herd-test-target/security/dependabot)
+[![Dependabot](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/awallgren/herd-test-target/main/badges/dependabot.json)](https://github.com/awallgren/herd-test-target/security/dependabot)
+[![Code Scanning](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/awallgren/herd-test-target/main/badges/code-scanning.json)](https://github.com/awallgren/herd-test-target/security/code-scanning)
