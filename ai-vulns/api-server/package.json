@@ -1,0 +1,23 @@
+{
+  "name": "ai-suggested-api-server",
+  "version": "1.0.0",
+  "description": "Intentional: AI-suggested Node.js API project with typosquatted and hallucinated npm packages mixed with legitimate ones. Scanner should flag known-malicious and suspicious package names.",
+  "private": true,
+  "dependencies": {
+    "express": "^4.18.0",
+    "jsonwebtoken": "^9.0.0",
+    "axios": "^1.6.0",
+    "lodahs": "^4.17.21",
+    "types-node": "^20.0.0",
+    "node-crypto-utils": "^1.0.0",
+    "crossenv": "^7.0.0",
+    "fast-json-validator": "^1.0.0",
+    "react-form-secure": "^2.0.0",
+    "express-auth-helper": "^1.0.0",
+    "event-stream-fake": "^4.0.0",
+    "ua-parser-lite": "^1.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.0.0"
+  }
+}

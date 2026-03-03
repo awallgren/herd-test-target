@@ -1,0 +1,41 @@
+# Intentional: AI-suggested Python dependencies containing typosquatted
+# and hallucinated packages mixed with legitimate ones.
+#
+# When developers ask an LLM "set up a Python ML project", the model may
+# hallucinate package names or suggest typosquats of popular packages.
+#
+# Scanner should flag: known-malicious package names, typosquats of popular
+# packages, packages with suspicious names.
+
+# Legitimate dependencies
+Flask==3.0.0
+requests==2.31.0
+tensorflow==2.15.0
+numpy==1.26.0
+
+# Intentional: typosquat of python-dateutil
+python3-dateutil==2.8.2
+
+# Intentional: typosquat of colorama (extra 'u')
+colourama==0.4.6
+
+# Intentional: hallucinated malicious packages with plausible names
+super-fast-crypto==1.0.0
+py-aes-encrypt==0.1.0
+fast-jwt-decoder==1.2.0
+simple-oauth-client==2.0.0
+
+# Intentional: typosquat of requests (singular)
+request==2.31.0
+
+# Intentional: typosquat of python-dateutil (double-l)
+python-dateutill==2.8.2
+
+# Intentional: namespace confusion — attacker package
+pillow-simd-nightly==9.0.0
+
+# Intentional: typosquat of jellyfish (lowercase-L instead of l)
+jeIlyfish==1.0.1
+
+# Intentional: typosquat of python-binance (extra prefix)
+python-binance-api==1.0.0
