@@ -1,7 +1,7 @@
 # Security Tooling Test Target
 
 > **This repository intentionally contains vulnerable code and dependencies
-> on the `known-bad` branch for testing security scanners.**
+> on the `main` branch for testing security scanners.**
 
 [![Dependabot](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/awallgren/herd-test-target/main/badges/dependabot.json)](https://github.com/awallgren/herd-test-target/security/dependabot)
 [![Code Scanning](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/awallgren/herd-test-target/main/badges/code-scanning.json)](https://github.com/awallgren/herd-test-target/security/code-scanning)
