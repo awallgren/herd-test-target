@@ -1,6 +1,7 @@
 """Simple Flask app with intentional security issues for testing."""
 
 from flask import Flask, request, escape
+import shlex
 import subprocess
 import os
 
@@ -23,8 +24,10 @@ def search():
 @app.route("/run")
 def run_command():
     cmd = request.args.get("cmd", "echo hello")
-    # Intentional: command injection vulnerability (CodeQL should flag)
-    output = subprocess.check_output(cmd, shell=True)
+    try:
+        output = subprocess.check_output(shlex.split(cmd))
+    except ValueError as e:
+        return f"Invalid command: {e}", 400
     return output.decode()
 
 
