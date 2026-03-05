@@ -31,7 +31,9 @@ def hash_password(password: str) -> str:
 
 def generate_session_token(user_id: int) -> str:
     """Generate a session token for a user.
-
+Note: ``user_id`` is accepted only for backwards compatibility and is
+    intentionally not used in token generation; tokens are not tied to a
+    specific user identifier.
     Uses a cryptographically secure random value instead of a weak hash
     of predictable data.
     """
