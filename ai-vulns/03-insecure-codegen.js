@@ -94,8 +94,10 @@ function renderUserComment(comment) {
 function displayWelcome() {
   const params = new URLSearchParams(window.location.search);
   const name = params.get('name');
-  // Intentional: Reflected XSS via document.write
-  document.write('<h1>Welcome, ' + name + '</h1>');
+  // Safely render the user-provided name as text to avoid XSS
+  const heading = document.createElement('h1');
+  heading.textContent = 'Welcome, ' + (name || '');
+  document.body.appendChild(heading);
 }
 
 // --- ReDoS (Regular Expression Denial of Service) ---
