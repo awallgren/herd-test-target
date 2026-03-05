@@ -36,6 +36,9 @@ jobs:
           echo "context=$PR_BODY" >> $GITHUB_OUTPUT
 
       - name: AI Review
+        # continue-on-error allows the workflow to pass even though
+        # ai-review-action/review is a placeholder action used for scanner testing
+        continue-on-error: true
         uses: ai-review-action/review@v2
         with:
           # Intentional: GITHUB_TOKEN with write permissions passed to
