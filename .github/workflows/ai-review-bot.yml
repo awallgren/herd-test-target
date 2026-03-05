@@ -36,15 +36,10 @@ jobs:
           echo "context=$PR_BODY" >> $GITHUB_OUTPUT
 
       - name: AI Review
-        uses: ai-review-action/review@v2
-        with:
-          # Intentional: GITHUB_TOKEN with write permissions passed to
-          # third-party action that processes untrusted PR content
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          context: ${{ steps.pr-context.outputs.context }}
-          auto-fix: true
-          auto-merge-on-approval: true
-          # Intentional: allow-commands lets the AI execute arbitrary
-          # git commands with write access
-          allow-commands: "git add,git commit,git push"
+        # Intentional: GITHUB_TOKEN with write permissions used to process
+        # untrusted PR content and post review comments
+        run: |
+          echo "Running AI review with context: ${{ steps.pr-context.outputs.context }}"
+          echo "Posting review comments using GITHUB_TOKEN..."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
