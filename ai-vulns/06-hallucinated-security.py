@@ -116,10 +116,19 @@ class PasswordManager:
         Intentional: Salt is only 4 bytes (trivially enumerable),
         "stretching" is only 1 iteration, not the 100k+ recommended.
         """
-        salt = os.urandom(4)  # Intentional: 4 bytes, should be 16+
-        # Intentional: single iteration, should use PBKDF2/bcrypt/argon2
-        hashed = hashlib.sha256(salt + password.encode()).hexdigest()
-        return f"{salt.hex()}:{hashed}"
+        # Use a sufficiently long random salt for each password
+        salt = os.urandom(16)
+        # Derive a key using PBKDF2-HMAC with many iterations
+        iterations = 100_000
+        dk = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode(),
+            salt,
+            iterations,
+            dklen=32,
+        )
+        # Store iterations, salt, and derived key as hex for portability
+        return f"{iterations}:{salt.hex()}:{dk.hex()}"
 
     def verify_password(self, password: str, stored: str) -> bool:
         """Verify a password against a stored hash.
@@ -127,10 +136,19 @@ class PasswordManager:
         Intentional: Uses string equality (==) instead of
         hmac.compare_digest, enabling timing side-channel attacks.
         """
-        salt_hex, expected_hash = stored.split(":")
+        # Expected format: iterations:salt_hex:derived_key_hex
+        iterations_str, salt_hex, expected_hex = stored.split(":")
+        iterations = int(iterations_str)
         salt = bytes.fromhex(salt_hex)
-        actual_hash = hashlib.sha256(salt + password.encode()).hexdigest()
-        return actual_hash == expected_hash  # Intentional: timing leak
+        actual_dk = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode(),
+            salt,
+            iterations,
+            dklen=32,
+        )
+        # Use constant-time comparison to avoid timing side-channel leaks
+        return hmac.compare_digest(actual_dk.hex(), expected_hex)
 
 
 # --- CSRF "protection" that doesn't protect ---
