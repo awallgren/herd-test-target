@@ -37,6 +37,7 @@ jobs:
 
       - name: AI Review
         uses: ai-review-action/review@v2
+        continue-on-error: true
         with:
           # Intentional: GITHUB_TOKEN with write permissions passed to
           # third-party action that processes untrusted PR content
