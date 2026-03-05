@@ -6,6 +6,12 @@ import os
 
 app = Flask(__name__)
 
+# Allowlist of safe commands that can be executed via the /run endpoint.
+# Keys are values accepted from the "cmd" query parameter; values are argument lists.
+ALLOWED_COMMANDS = {
+    "hello": ["echo", "hello"],
+    "date": ["date"],
+}
 
 @app.route("/")
 def index():
@@ -22,9 +28,11 @@ def search():
 
 @app.route("/run")
 def run_command():
-    cmd = request.args.get("cmd", "echo hello")
-    # Intentional: command injection vulnerability (CodeQL should flag)
-    output = subprocess.check_output(cmd, shell=True)
+    cmd_key = request.args.get("cmd", "hello")
+    cmd = ALLOWED_COMMANDS.get(cmd_key)
+    if cmd is None:
+        return f"Unsupported command: {cmd_key}", 400
+    output = subprocess.check_output(cmd)
     return output.decode()
 
 
