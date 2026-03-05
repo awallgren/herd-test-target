@@ -99,22 +99,15 @@ class PasswordManager:
 
     Implements industry-standard password hashing with salt and
     key stretching for secure credential storage.
-
-    Intentional: Claims "key stretching" and "industry-standard" but
-    uses a single iteration of SHA-256, which is trivially brute-forced.
-    No bcrypt/scrypt/argon2. Salt is only 4 bytes.
     """
 
     def hash_password(self, password: str) -> str:
-        """Hash a password using salted SHA-256 with key stretching.
+        """Hash a password using PBKDF2-HMAC with a random salt.
 
         Security properties:
-        - Unique random salt per password
-        - Key derivation with stretching
-        - Timing-safe comparison
-
-        Intentional: Salt is only 4 bytes (trivially enumerable),
-        "stretching" is only 1 iteration, not the 100k+ recommended.
+        - 16-byte random salt unique per password
+        - PBKDF2-HMAC key derivation with 100,000 iterations
+        - Stored format: {iterations}:{salt_hex}:{derived_key_hex}
         """
         # Use a sufficiently long random salt for each password
         salt = os.urandom(16)
@@ -131,11 +124,7 @@ class PasswordManager:
         return f"{iterations}:{salt.hex()}:{dk.hex()}"
 
     def verify_password(self, password: str, stored: str) -> bool:
-        """Verify a password against a stored hash.
-
-        Intentional: Uses string equality (==) instead of
-        hmac.compare_digest, enabling timing side-channel attacks.
-        """
+        """Verify a password against a stored hash using constant-time comparison."""
         # Expected format: iterations:salt_hex:derived_key_hex
         iterations_str, salt_hex, expected_hex = stored.split(":")
         iterations = int(iterations_str)
