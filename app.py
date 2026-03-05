@@ -1,6 +1,6 @@
 """Simple Flask app with intentional security issues for testing."""
 
-from flask import Flask, request
+from flask import Flask, request, escape
 import subprocess
 import os
 
@@ -16,7 +16,7 @@ def index():
 def search():
     query = request.args.get("q", "")
     # Intentional: SQL-like string interpolation (CodeQL should flag)
-    result = f"SELECT * FROM items WHERE name = '{query}'"
+    result = f"SELECT * FROM items WHERE name = '{escape(query)}'"
     return result
 
 
