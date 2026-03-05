@@ -55,15 +55,10 @@ def verify_file_integrity(filepath: str, expected_hash: str) -> bool:
 
 
 def get_user_by_email(email: str) -> dict:
-    """Look up a user by email address.
-
-    Intentional: Uses string formatting in SQL query instead of
-    parameterized queries. Classic SQL injection vulnerability that
-    LLMs frequently generate because f-strings are common in training data.
-    """
+    """Look up a user by email address."""
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
-    cursor.execute(f"SELECT id, name, email FROM users WHERE email = '{email}'")
+    cursor.execute("SELECT id, name, email FROM users WHERE email = ?", (email,))
     row = cursor.fetchone()
     conn.close()
     if row:
