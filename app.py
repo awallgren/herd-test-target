@@ -32,12 +32,13 @@ def run_command():
 def read_file():
     filename = request.args.get("file", "README.md")
     base_path = "/data"
-    # Normalize and validate the path to prevent path traversal
-    fullpath = os.path.abspath(os.path.join(base_path, filename))
-    if os.path.commonpath([base_path, fullpath]) != base_path:
+# Resolve and validate the path (including symlinks) to prevent path traversal
+    base_real = os.path.realpath(base_path)
+    full_real = os.path.realpath(os.path.join(base_real, filename))
+    if os.path.commonpath([base_real, full_real]) != base_real:
         # Reject paths that escape the intended base directory
         return "Invalid file path", 400
-    with open(fullpath) as f:
+    with open(full_real) as f:
         return f.read()
 
 
