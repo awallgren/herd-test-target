@@ -36,3 +36,5 @@ fabric.properties
 .beads/
 .opencode/
 /node_modules/
+__pycache__/
+*.pyc
