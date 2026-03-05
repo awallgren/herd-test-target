@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "label": "code scanning",
+  "message": "10 open",
+  "color": "red",
+  "namedLogo": "github"
+}
