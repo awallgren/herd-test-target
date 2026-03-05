@@ -1,14 +1,14 @@
 const express = require('express');
+const _ = require('lodash');
 const app = express();
 
 app.get('/', (req, res) => {
   res.send('Hello World');
 });
 
-// Intentional: reflected XSS (CodeQL should flag)
 app.get('/greet', (req, res) => {
-  const name = req.query.name;
-  res.send(`<h1>Hello ${name}</h1>`);
+  const name = req.query.name || '';
+  res.send(`<h1>Hello ${_.escape(name)}</h1>`);
 });
 
 // Intentional: prototype pollution via merge
