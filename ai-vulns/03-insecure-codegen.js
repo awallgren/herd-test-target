@@ -79,13 +79,14 @@ function generateOtp() {
 // --- DOM-based XSS ---
 
 /**
- * Intentional: Renders user input directly into innerHTML.
- * Scanner should flag DOM XSS / unsafe innerHTML assignment.
+ * Renders user comment safely using DOM text node to avoid XSS.
  */
 function renderUserComment(comment) {
   const container = document.getElementById('comments');
-  // Intentional: No sanitization — script tags in comment execute
-  container.innerHTML += `<div class="comment">${comment}</div>`;
+  const div = document.createElement('div');
+  div.className = 'comment';
+  div.textContent = comment;
+  container.appendChild(div);
 }
 
 /**
