@@ -35,4 +35,7 @@ fabric.properties
 .logs/
 .beads/
 .opencode/
-/node_modules/
+/node_modules
+ai-vulns/__pycache__
+**/__pycache__
+*.pyc
