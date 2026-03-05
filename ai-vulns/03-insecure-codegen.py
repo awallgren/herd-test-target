@@ -34,6 +34,10 @@ def generate_session_token(user_id: int) -> str:
 
     Uses a cryptographically secure random value instead of a weak hash
     of predictable data.
+
+    Note: ``user_id`` is accepted only for backwards compatibility and is
+    intentionally not used in token generation; tokens are not tied to a
+    specific user identifier.
     """
     return secrets.token_urlsafe(32)
 

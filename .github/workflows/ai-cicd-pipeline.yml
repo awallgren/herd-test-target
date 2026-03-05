@@ -29,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Detect changed files
         id: changes
@@ -63,7 +65,13 @@ jobs:
       - name: Run AI-generated tests
         run: |
           pip install pytest
-          pytest test_ai_*.py -v
+          shopt -s nullglob
+          files=(test_ai_*.py)
+          if [ ${#files[@]} -gt 0 ]; then
+            pytest "${files[@]}" -v
+          else
+            echo "No AI-generated test files to run"
+          fi
 
   ai-security-review:
     runs-on: ubuntu-latest
