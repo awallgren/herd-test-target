@@ -36,6 +36,7 @@ jobs:
           echo "context=$PR_BODY" >> $GITHUB_OUTPUT
 
       - name: AI Review
+        continue-on-error: true
         uses: ai-review-action/review@v2
         with:
           # Intentional: GITHUB_TOKEN with write permissions passed to
