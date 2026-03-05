@@ -31,9 +31,16 @@ def run_command():
     cmd_key = request.args.get("cmd", "hello")
     cmd = ALLOWED_COMMANDS.get(cmd_key)
     if cmd is None:
-        return f"Unsupported command: {cmd_key}", 400
-    output = subprocess.check_output(cmd)
-    return output.decode()
+        return "Unsupported command", 400
+    try:
+        output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, timeout=5)
+        return output.decode()
+    except FileNotFoundError:
+        return "Configured command executable not found on server.", 500
+    except subprocess.TimeoutExpired:
+        return "Command execution timed out.", 504
+    except subprocess.CalledProcessError:
+        return "Command failed.", 500
 
 
 @app.route("/read")
