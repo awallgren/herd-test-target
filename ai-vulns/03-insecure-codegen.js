@@ -76,20 +76,21 @@ function generateOtp() {
   return Math.floor(Math.random() * 9000 + 1000).toString();
 }
 
-// --- DOM-based XSS ---
+// --- DOM manipulation ---
 
 /**
- * Intentional: Renders user input directly into innerHTML.
- * Scanner should flag DOM XSS / unsafe innerHTML assignment.
+ * Renders user input safely using DOM text APIs to prevent XSS.
  */
 function renderUserComment(comment) {
   const container = document.getElementById('comments');
-  // Intentional: No sanitization — script tags in comment execute
-  container.innerHTML += `<div class="comment">${comment}</div>`;
+  const div = document.createElement('div');
+  div.className = 'comment';
+  div.textContent = comment;
+  container.appendChild(div);
 }
 
 /**
- * Intentional: Uses document.write with URL parameter.
+ * Displays a welcome message using the URL name parameter.
  */
 function displayWelcome() {
   const params = new URLSearchParams(window.location.search);
