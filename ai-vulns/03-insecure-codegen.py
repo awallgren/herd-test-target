@@ -72,17 +72,15 @@ def get_user_by_email(email: str) -> dict:
 
 
 def search_products(query: str, category: str) -> list:
-    """Search products with optional category filter.
-
-    Intentional: Multiple injection points via string concatenation.
-    An LLM might produce this when asked to build a search endpoint.
-    """
+    """Search products with optional category filter."""
     conn = sqlite3.connect("shop.db")
     cursor = conn.cursor()
-    sql = "SELECT * FROM products WHERE name LIKE '%" + query + "%'"
+    sql = "SELECT * FROM products WHERE name LIKE ?"
+    params = [f"%{query}%"]
     if category:
-        sql += " AND category = '" + category + "'"
-    cursor.execute(sql)
+        sql += " AND category = ?"
+        params.append(category)
+    cursor.execute(sql, params)
     results = cursor.fetchall()
     conn.close()
     return results
