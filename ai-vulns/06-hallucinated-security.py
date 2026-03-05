@@ -100,37 +100,41 @@ class PasswordManager:
     Implements industry-standard password hashing with salt and
     key stretching for secure credential storage.
 
-    Intentional: Claims "key stretching" and "industry-standard" but
-    uses a single iteration of SHA-256, which is trivially brute-forced.
-    No bcrypt/scrypt/argon2. Salt is only 4 bytes.
+    Note: Uses PBKDF2-HMAC-SHA256 with a per-password random salt
+    and a high iteration count to slow down brute-force attacks.
     """
 
+    # Number of PBKDF2 iterations for key stretching.
+    _ITERATIONS = 100_000
+
     def hash_password(self, password: str) -> str:
-        """Hash a password using salted SHA-256 with key stretching.
+        """Hash a password using salted PBKDF2-HMAC-SHA256.
 
         Security properties:
-        - Unique random salt per password
-        - Key derivation with stretching
-        - Timing-safe comparison
-
-        Intentional: Salt is only 4 bytes (trivially enumerable),
-        "stretching" is only 1 iteration, not the 100k+ recommended.
+        - Unique random salt per password (16 bytes)
+        - Key derivation with stretching via PBKDF2
+        - Result encoded as "salt_hex:hash_hex"
         """
-        salt = os.urandom(4)  # Intentional: 4 bytes, should be 16+
-        # Intentional: single iteration, should use PBKDF2/bcrypt/argon2
-        hashed = hashlib.sha256(salt + password.encode()).hexdigest()
+        salt = os.urandom(16)
+        dk = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), salt, self._ITERATIONS
+        )
+        hashed = dk.hex()
         return f"{salt.hex()}:{hashed}"
 
     def verify_password(self, password: str, stored: str) -> bool:
         """Verify a password against a stored hash.
 
-        Intentional: Uses string equality (==) instead of
-        hmac.compare_digest, enabling timing side-channel attacks.
+        Uses PBKDF2-HMAC-SHA256 and constant-time comparison to avoid
+        timing side-channel attacks.
         """
         salt_hex, expected_hash = stored.split(":")
         salt = bytes.fromhex(salt_hex)
-        actual_hash = hashlib.sha256(salt + password.encode()).hexdigest()
-        return actual_hash == expected_hash  # Intentional: timing leak
+        dk = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), salt, self._ITERATIONS
+        )
+        actual_hash = dk.hex()
+        return hmac.compare_digest(actual_hash, expected_hash)
 
 
 # --- CSRF "protection" that doesn't protect ---
