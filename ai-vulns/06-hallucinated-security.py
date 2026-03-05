@@ -137,9 +137,16 @@ class PasswordManager:
         hmac.compare_digest, enabling timing side-channel attacks.
         """
         # Expected format: iterations:salt_hex:derived_key_hex
-        iterations_str, salt_hex, expected_hex = stored.split(":")
-        iterations = int(iterations_str)
-        salt = bytes.fromhex(salt_hex)
+try:
+            parts = stored.split(":", 2)
+            if len(parts) != 3:
+                return False
+            iterations_str, salt_hex, expected_hex = parts
+            iterations = int(iterations_str)
+            salt = bytes.fromhex(salt_hex)
+        except (ValueError, TypeError):
+            # Malformed stored value (wrong format, bad integer, invalid hex)
+            return False
         actual_dk = hashlib.pbkdf2_hmac(
             "sha256",
             password.encode(),
