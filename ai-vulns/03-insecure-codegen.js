@@ -89,7 +89,7 @@ function renderUserComment(comment) {
 }
 
 /**
- * Intentional: Uses document.write with URL parameter.
+ * Intentional: Reads name from URL parameter and renders it in the DOM.
  */
 function displayWelcome() {
   const params = new URLSearchParams(window.location.search);
