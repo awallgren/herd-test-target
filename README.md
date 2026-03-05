@@ -1,4 +1,4 @@
-# Security Tooling Test Target
+> on the `known-bad` branch for testing security scanners.**
 
 > **This repository intentionally contains vulnerable code and dependencies
 > on the `known-bad` branch for testing security scanners.**
