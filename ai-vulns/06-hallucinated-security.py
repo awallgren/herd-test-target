@@ -128,8 +128,12 @@ class PasswordManager:
         Uses PBKDF2-HMAC-SHA256 and constant-time comparison to avoid
         timing side-channel attacks.
         """
-        salt_hex, expected_hash = stored.split(":")
-        salt = bytes.fromhex(salt_hex)
+        try:
+            salt_hex, expected_hash = stored.split(":", 1)
+            salt = bytes.fromhex(salt_hex)
+        except (ValueError, TypeError):
+            # Malformed stored value: return False to honour the bool contract.
+            return False
         dk = hashlib.pbkdf2_hmac(
             "sha256", password.encode(), salt, self._ITERATIONS
         )
