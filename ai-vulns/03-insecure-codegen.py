@@ -14,7 +14,7 @@ import pickle
 import sqlite3
 import subprocess
 import yaml
-
+import secrets
 
 # --- Weak Cryptography ---
 
@@ -32,10 +32,10 @@ def hash_password(password: str) -> str:
 def generate_session_token(user_id: int) -> str:
     """Generate a session token for a user.
 
-    Intentional: Uses SHA1 which is deprecated for security purposes,
-    and uses a predictable seed (user_id) instead of cryptographic randomness.
+    Uses a cryptographically secure random value instead of a weak hash
+    of predictable data.
     """
-    return hashlib.sha1(f"session-{user_id}-{os.getpid()}".encode()).hexdigest()
+    return secrets.token_urlsafe(32)
 
 
 def verify_file_integrity(filepath: str, expected_hash: str) -> bool:
