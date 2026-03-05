@@ -100,25 +100,24 @@ class PasswordManager:
     Implements industry-standard password hashing with salt and
     key stretching for secure credential storage.
 
-    Intentional: Claims "key stretching" and "industry-standard" but
-    uses a single iteration of SHA-256, which is trivially brute-forced.
-    No bcrypt/scrypt/argon2. Salt is only 4 bytes.
+    Uses PBKDF2-HMAC-SHA256 with a 16-byte random salt and 100,000
+    iterations. Stored format: ``iterations:salt_hex:derived_key_hex``.
     """
 
+    _MIN_ITERATIONS = 10_000
+    _MAX_ITERATIONS = 10_000_000
+
     def hash_password(self, password: str) -> str:
-        """Hash a password using salted SHA-256 with key stretching.
+        """Hash a password using PBKDF2-HMAC-SHA256 with a random salt.
 
         Security properties:
-        - Unique random salt per password
-        - Key derivation with stretching
-        - Timing-safe comparison
+        - 16-byte unique random salt per password
+        - PBKDF2-HMAC-SHA256 key derivation with 100,000 iterations
+        - Timing-safe comparison via hmac.compare_digest
 
-        Intentional: Salt is only 4 bytes (trivially enumerable),
-        "stretching" is only 1 iteration, not the 100k+ recommended.
+        Returns a colon-separated string: ``iterations:salt_hex:derived_key_hex``.
         """
-        # Use a sufficiently long random salt for each password
         salt = os.urandom(16)
-        # Derive a key using PBKDF2-HMAC with many iterations
         iterations = 100_000
         dk = hashlib.pbkdf2_hmac(
             "sha256",
@@ -127,19 +126,26 @@ class PasswordManager:
             iterations,
             dklen=32,
         )
-        # Store iterations, salt, and derived key as hex for portability
         return f"{iterations}:{salt.hex()}:{dk.hex()}"
 
     def verify_password(self, password: str, stored: str) -> bool:
         """Verify a password against a stored hash.
 
-        Intentional: Uses string equality (==) instead of
-        hmac.compare_digest, enabling timing side-channel attacks.
+        Returns False for malformed stored values or out-of-range iteration
+        counts rather than raising an exception.
         """
-        # Expected format: iterations:salt_hex:derived_key_hex
-        iterations_str, salt_hex, expected_hex = stored.split(":")
-        iterations = int(iterations_str)
-        salt = bytes.fromhex(salt_hex)
+        try:
+            parts = stored.split(":")
+            if len(parts) != 3:
+                return False
+            iterations_str, salt_hex, expected_hex = parts
+            iterations = int(iterations_str)
+            salt = bytes.fromhex(salt_hex)
+        except (ValueError, TypeError):
+            return False
+        # Guard against CPU-DoS via attacker-controlled iteration counts
+        if not (self._MIN_ITERATIONS <= iterations <= self._MAX_ITERATIONS):
+            return False
         actual_dk = hashlib.pbkdf2_hmac(
             "sha256",
             password.encode(),
@@ -147,7 +153,6 @@ class PasswordManager:
             iterations,
             dklen=32,
         )
-        # Use constant-time comparison to avoid timing side-channel leaks
         return hmac.compare_digest(actual_dk.hex(), expected_hex)
 
 
