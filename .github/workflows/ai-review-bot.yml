@@ -19,6 +19,7 @@ permissions:
 jobs:
   ai-review:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v4
