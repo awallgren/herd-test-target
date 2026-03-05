@@ -31,8 +31,11 @@ def run_command():
 @app.route("/read")
 def read_file():
     filename = request.args.get("file", "README.md")
-    # Intentional: path traversal vulnerability (CodeQL should flag)
-    with open(os.path.join("/data", filename)) as f:
+    base_path = os.path.realpath("/data")
+    fullpath = os.path.realpath(os.path.join(base_path, filename))
+    if os.path.commonpath([base_path, fullpath]) != base_path:
+        return "Access denied", 403
+    with open(fullpath) as f:
         return f.read()
 
 
