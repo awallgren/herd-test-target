@@ -31,7 +31,7 @@ def run_command():
     cmd_key = request.args.get("cmd", "hello")
     cmd = ALLOWED_COMMANDS.get(cmd_key)
     if cmd is None:
-        return f"Unsupported command: {cmd_key}", 400
+return "Unsupported command", 400
     output = subprocess.check_output(cmd)
     return output.decode()
 
