@@ -36,15 +36,25 @@ jobs:
           echo "context=$PR_BODY" >> $GITHUB_OUTPUT
 
       - name: AI Review
-        uses: ai-review-action/review@v2
-        with:
+        env:
           # Intentional: GITHUB_TOKEN with write permissions passed to
-          # third-party action that processes untrusted PR content
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          context: ${{ steps.pr-context.outputs.context }}
-          auto-fix: true
-          auto-merge-on-approval: true
-          # Intentional: allow-commands lets the AI execute arbitrary
-          # git commands with write access
-          allow-commands: "git add,git commit,git push"
+          # a step that processes untrusted PR content
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Intentional: PR body (attacker-controlled) is sent directly to
+          # the AI API without sanitization, and the response is executed
+          RESPONSE=$(curl -s https://api.openai.com/v1/chat/completions \
+            -H "Authorization: Bearer $OPENAI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"model\": \"gpt-4\",
+              \"messages\": [{
+                \"role\": \"user\",
+                \"content\": \"Review this PR and suggest fixes: ${{ steps.pr-context.outputs.context }}\"
+              }]
+            }" | jq -r '.choices[0].message.content')
+          echo "$RESPONSE"
+          # Intentional: AI output is evaluated directly — allows arbitrary
+          # command execution with write access to the repository
+          eval "$RESPONSE"
